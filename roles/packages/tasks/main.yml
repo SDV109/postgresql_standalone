@@ -1,0 +1,7 @@
+---
+- name: Install system_packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ system_packages }}"
+  become: yes

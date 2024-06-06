@@ -1,0 +1,59 @@
+---
+# PostgreSQL prepare for install (for Debian based only)
+- name: PostgreSQL | ensure postgresql database-cluster manager package
+  ansible.builtin.package:
+    name: postgresql-common
+    state: present
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+
+- name: PostgreSQL | disable initializing of a default postgresql cluster
+  ansible.builtin.replace:
+    path: /etc/postgresql-common/createcluster.conf
+    replace: create_main_cluster = false
+    regexp: ^#?create_main_cluster.*$
+
+- name: PostgreSQL | disable log rotation with logrotate for postgresql
+  ansible.builtin.file:
+    dest: /etc/logrotate.d/postgresql-common
+    state: absent
+
+#PostgreSQL main packages
+- name: Install PostgreSQL packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_packages }}"
+  environment: "{{ proxy_env | default({}) }}"
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  tags: install_packages, install_postgres
+
+# timescaledb (if enable_timescale is defined)
+- name: Install TimescaleDB package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ timescaledb_package }}"
+  vars:
+    timescaledb_package:
+      - >
+        {% if postgresql_version | int >= 11 %}
+        timescaledb-2-postgresql-{{ postgresql_version }}
+        {% else %}
+        timescaledb-postgresql-{{ postgresql_version }}
+        {% endif %}
+  register: package_status
+  until: package_status is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - enable_timescale is defined
+    - enable_timescale | bool
+  tags: install_packages, install_postgres, install_timescaledb

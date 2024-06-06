@@ -1,0 +1,67 @@
+---
+#block ntp
+ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
+ntp_servers: []
+#  - "10.128.64.44"
+#  - "10.128.64.45"
+
+#block timezone
+#timezone: ""
+#timezone: "Asia/Krasnoyarsk"
+# timezone: "Etc/UTC"
+# timezone: "America/New_York"
+timezone: "Europe/Moscow"
+# timezone: "Europe/Berlin"
+
+#block locale
+locale_gen:
+  - { language_country: "en_US", encoding: "UTF-8" }
+  - { language_country: "ru_RU", encoding: "UTF-8" }
+#  - { language_country: "de_DE", encoding: "UTF-8" }
+#  - { language_country: "", encoding: "" }
+
+locale: "en_US.utf-8"
+#locale: "ru_RU.utf-8"
+
+#block sudo
+sudo_users:
+  - name: "postgres"
+    nopasswd: "yes"  # or "no" to require a password
+    commands: "ALL"
+#  - name: "joe" # other user (example)
+#    nopasswd: "no"
+#    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
+
+#block packages
+system_packages:
+  - curl
+  - less
+  - sudo
+  - vim
+  - gpg
+  - iptables
+  - acl
+  - dnsutils
+  - htop
+
+#block postgresql
+postgresql_packages:
+  - postgresql-{{ postgresql_version }}
+  - postgresql-client-{{ postgresql_version }}
+  - postgresql-contrib-{{ postgresql_version }}
+  - postgresql-server-dev-{{ postgresql_version }}
+#  - postgresql-{{ postgresql_version }}-dbgsym
+#  - postgresql-{{ postgresql_version }}-repack
+#  - postgresql-{{ postgresql_version }}-cron
+  - postgresql-{{ postgresql_version }}-pg-stat-kcache
+  - postgresql-{{ postgresql_version }}-pg-wait-sampling
+#  - postgresql-{{ postgresql_version }}-postgis-3
+#  - postgresql-{{ postgresql_version }}-pgrouting
+#  - postgresql-{{ postgresql_version }}-pgvector
+#  - postgresql-{{ postgresql_version }}-pgaudit
+
+install_timescaledb: true # or 'true' if you want to install TimescaleDB package
+timescaledb_packages:
+  - timescaledb-2-loader-postgresql-{{ postgresql_version }}
+  - timescaledb-2-postgresql-{{ postgresql_version }}
+

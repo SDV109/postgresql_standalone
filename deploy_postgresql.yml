@@ -1,0 +1,27 @@
+---
+- name: Install PostgreSQL standalone
+  hosts: all
+  become: yes
+
+  pre_tasks:
+#    - name: Include main variables
+#      ansible.builtin.include_vars: "vars/main.yml"
+#      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
+  roles:
+    - packages
+#    - add_repo
+#    - install_postgresql
+#    - sudo
+#    - locale
+#    - timezone
+#    - ntp
+    
+    
+    
+    
+    
