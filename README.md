@@ -8,3 +8,9 @@ sudo apt update && sudo apt install -y python3-pip sshpass git
 pip3 install ansible
 
 git clone https://github.com/SDV109/postgresql_standalone.git
+
+cd postgresql_standalone
+
+nano inventory
+
+ansible-playbook deploy_postgresql.yml
