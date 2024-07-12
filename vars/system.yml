@@ -65,3 +65,7 @@ timescaledb_packages:
   - timescaledb-2-loader-postgresql-{{ postgresql_version }}
   - timescaledb-2-postgresql-{{ postgresql_version }}
 
+# stats_temp_directory (mount the statistics directory in tmpfs)
+# if postgresql_version < 15
+postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
+postgresql_stats_temp_directory_size: "1024m"

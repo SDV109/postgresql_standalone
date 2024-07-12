@@ -1,0 +1,89 @@
+---
+
+- name: Make sure handlers are flushed immediately
+  ansible.builtin.meta: flush_handlers
+
+# users info
+- block:
+    - name: Get postgresql users list
+      run_once: true
+      become: true
+      become_user: postgres
+      ansible.builtin.command:
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ postgres }} -d postgres -Xc\"\\du\""
+      register: users_result
+      delegate_to: "{{ groups.master[0] }}"
+      changed_when: false
+
+    - name: PostgreSQL list of users
+      run_once: true
+      ansible.builtin.debug:
+        var: users_result.stdout_lines
+  ignore_errors: true
+  tags: users, users_list, cluster_info, cluster_status, point_in_time_recovery
+
+# databases info
+- block:
+    - name: Get postgresql database list
+      run_once: true
+      become: true
+      become_user: postgres
+      ansible.builtin.command:
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ postgres }} -d postgres -Xc
+        \"
+          SELECT
+          d.datname as name,
+          pg_get_userbyid(d.datdba) as owner,
+          pg_encoding_to_char(d.encoding) as encoding,
+          d.datcollate as collate,
+          d.datctype as ctype,
+          CASE
+          WHEN has_database_privilege(d.datname, 'CONNECT')
+          THEN pg_size_pretty(pg_database_size(d.datname))
+          ELSE 'No Access'
+          END
+          size,
+          t.spcname as tablespace
+          FROM pg_catalog.pg_database d
+          JOIN pg_catalog.pg_tablespace t
+          ON d.dattablespace = t.oid
+          WHERE NOT datistemplate
+          ORDER BY 1
+        \""
+      register: dbs_result
+      delegate_to: "{{ groups.master[0] }}"
+      changed_when: false
+
+    - name: PostgreSQL list of databases
+      run_once: true
+      ansible.builtin.debug:
+        var: dbs_result.stdout_lines
+  ignore_errors: true
+  tags: databases, db_list, cluster_info, cluster_status, point_in_time_recovery
+
+
+- name: Check PostgreSQL is started
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+  register: pg_ctl_status_result
+  changed_when: false
+  failed_when:
+    - pg_ctl_status_result.rc != 0
+    - pg_ctl_status_result.rc != 3
+
+- name: PostgreSQL Cluster health
+  run_once: true
+  ansible.builtin.debug:
+    var: pg_ctl_status_result
+
+- name: PostgreSQL connection info
+  run_once: true
+  ansible.builtin.debug:
+    msg:
+      - +------------------------------------------------+
+      - address {{ inventory_hostname }}
+      - port {% if pgbouncer_install %}{{ pgbouncer_listen_port }} (pgbouncer){% else %}{{ postgresql_port }}{% endif %}
+      - +------------------------------------------------+
+
+...

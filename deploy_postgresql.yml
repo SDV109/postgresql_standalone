@@ -1,25 +1,121 @@
 ---
-- name: Install PostgreSQL standalone
+- name: Deploy PostgreSQL standalone
   hosts: all
   become: yes
+  become_method: sudo
+  gather_facts: true
+  tags: always
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
-#    - name: Include main variables
-#      ansible.builtin.include_vars: "vars/main.yml"
-#      tags: always
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
 
     - name: Include system variables
       ansible.builtin.include_vars: "vars/system.yml"
       tags: always
 
+    - name: System information
+      ansible.builtin.debug:
+        var: system_info
+      vars:
+        system_info:
+          OS: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
+          Kernel: "{{ ansible_kernel | default('N/A') }}"
+          CPU model: >-
+            {{ ansible_processor[2] | default('N/A') }},
+            count: {{ ansible_processor_count | default('N/A') }},
+            cores: {{ ansible_processor_cores | default('N/A') }}
+          Memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+          Disk space total: >-
+            {{
+              (ansible_mounts
+                | map(attribute='size_total')
+                | map('int')
+                | sum / 1024 / 1024 / 1024
+              )
+              | round(2) if ansible_mounts is defined else 'N/A'
+            }} GB
+          Architecture: "{{ ansible_architecture | default('N/A') }}"
+          Virtualization type: "{{ ansible_virtualization_type | default('N/A') }}"
+          Product name: "{{ ansible_product_name | default('N/A') }}"
+      tags: always
+
+  roles:
+    - role: pre-checks
+      vars:
+        minimal_ansible_version: 2.11.0
+        timescale_minimal_pg_version: 12 # if enable_timescale is defined
+      tags: always
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+
   roles:
     - packages
-#    - add_repo
-#    - install_postgresql
-#    - sudo
-#    - locale
-#    - timezone
-#    - ntp
+
+    - name: Make sure the gnupg and apt-transport-https packages are present
+      ansible.builtin.apt:
+        pkg:
+          - gnupg
+          - apt-transport-https
+        state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+
+    - name: Make sure that the iproute is installed
+      ansible.builtin.apt:
+        name: iproute2
+        state: present
+      register: apt_status
+      until: apt_status is success
+      delay: 5
+      retries: 3
+
+  roles:
+    - role: add_repo
+    - role: locale
+    - role: timezone
+    - role: ntp
+    - role: sudo
+
+#    - role: pgbouncer
+#      when: pgbouncer_install|bool
+
+    - role: install_postgresql
+
+    # optional
+    - role: postgresql-users
+      when: postgresql_users | length > 0
+
+    - role: postgresql-databases
+      when: postgresql_databases | length > 0
+
+    - role: postgresql-schemas
+      when: postgresql_schemas | length > 0
+
+    - role: postgresql-extensions
+      when: postgresql_extensions | length > 0
+
+#    - role: pgbouncer/config
+#      when: pgbouncer_install|bool
+
+    # finish (info)
+    - role: deploy-finish
+
+
+
     
     
     
