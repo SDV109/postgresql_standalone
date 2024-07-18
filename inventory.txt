@@ -1,6 +1,6 @@
 [hosts]
-192.168.62.206 hostname=stand01
-192.168.62.207 hostname=stand02
+192.168.62.206 hostname=standalone01 postgresql_exists=false
+#192.168.62.207 hostname=standalone02 postgresql_exists=false
 
 [all:vars]
 ansible_connection='ssh'

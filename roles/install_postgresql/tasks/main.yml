@@ -127,7 +127,7 @@
 
 - name: Prepare PostgreSQL | Check exists postgresql.base.conf
   ansible.builtin.stat:
-    path: {{ postgresql_conf_dir }}/postgresql.base.conf
+    path: "{{ postgresql_conf_dir }}/postgresql.base.conf"
   register: conf_exists
 
 - name: Prepare PostgreSQL | Move base conf file in postgresql.base.conf
