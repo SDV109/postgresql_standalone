@@ -61,7 +61,7 @@
       retries: 3
 
   roles:
-    - packages
+    - role: packages
 
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
