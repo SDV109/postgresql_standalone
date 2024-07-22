@@ -125,13 +125,17 @@
   register: pg_createcluster_result
   failed_when: pg_createcluster_result.rc != 0
 
-- name: Prepare PostgreSQL | Restart PostgreSQL 
+- name: Prepare PostgreSQL | Restart PostgreSQL
   become: true
   become_user: postgres
-  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+  ansible.builtin.command: >
+    {{ postgresql_bin_dir }}/pg_ctl
+    start -D {{ postgresql_data_dir }}
+    -o "-c config_file={{ postgresql_conf_dir }}/postgresql.conf"
   register: pg_ctl_start_result
   failed_when:
-    - pg_ctl_restart_result.rc != 0
+    - pg_ctl_start_result.rc != 0
+
 
 - name: Prepare PostgreSQL | Check exists postgresql.base.conf
   ansible.builtin.stat:
