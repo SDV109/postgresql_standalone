@@ -60,7 +60,7 @@ postgresql_packages:
 #  - postgresql-{{ postgresql_version }}-pgvector
 #  - postgresql-{{ postgresql_version }}-pgaudit
 
-install_timescaledb: true # or 'true' if you want to install TimescaleDB package
+install_timescaledb: false # or 'true' if you want to install TimescaleDB package
 timescaledb_packages:
   - timescaledb-2-loader-postgresql-{{ postgresql_version }}
   - timescaledb-2-postgresql-{{ postgresql_version }}
@@ -69,3 +69,21 @@ timescaledb_packages:
 # if postgresql_version < 15
 postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
 postgresql_stats_temp_directory_size: "1024m"
+
+os_valid_distributions:
+  - RedHat
+  - CentOS
+  - Rocky
+  - OracleLinux
+  - Ubuntu
+  - Debian
+  - AlmaLinux
+
+os_minimum_versions:
+  RedHat: 7
+  CentOS: 7
+  Rocky: 8.4
+  OracleLinux: 7
+  Ubuntu: 20.04
+  Debian: 10
+  AlmaLinux: 8.3

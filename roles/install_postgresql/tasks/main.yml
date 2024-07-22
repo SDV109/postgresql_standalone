@@ -23,9 +23,7 @@
     path: /etc/postgresql-common/createcluster.conf
     replace: initdb_options = '--data-checksums'
     regexp: ^#?initdb_options.*$
-  when: 
-    - postgresql_data_checksums if defined
-    - postgresql_data_checksums | bool
+  when: postgresql_data_checksums is defined and postgresql_data_checksums | bool
   tags: install_postgres
 
 - name: PostgreSQL | disable log rotation with logrotate for postgresql
@@ -40,6 +38,7 @@
     name: "{{ item }}"
     state: present
   loop: "{{ postgresql_packages }}"
+  become: yes
   environment: "{{ proxy_env | default({}) }}"
   register: apt_status
   until: apt_status is success
@@ -53,6 +52,7 @@
     name: "{{ item }}"
     state: present
   loop: "{{ timescaledb_package }}"
+  become: yes
   vars:
     timescaledb_package:
       - >
@@ -125,13 +125,21 @@
   register: pg_createcluster_result
   failed_when: pg_createcluster_result.rc != 0
 
+- name: Prepare PostgreSQL | Restart PostgreSQL 
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl start -D {{ postgresql_data_dir }}"
+  register: pg_ctl_start_result
+  failed_when:
+    - pg_ctl_restart_result.rc != 0
+
 - name: Prepare PostgreSQL | Check exists postgresql.base.conf
   ansible.builtin.stat:
     path: "{{ postgresql_conf_dir }}/postgresql.base.conf"
   register: conf_exists
 
 - name: Prepare PostgreSQL | Move base conf file in postgresql.base.conf
-  ansible.builtin.command: mv {{ postgresql_conf_dir }}/postgresqlconf {{ postgresql_conf_dir }}/postgresql.base.conf
+  ansible.builtin.command: mv {{ postgresql_conf_dir }}/postgresql.conf {{ postgresql_conf_dir }}/postgresql.base.conf
   when: not conf_exists.stat.exists
 
 - name: Prepare PostgreSQL | Generate postgresql.conf

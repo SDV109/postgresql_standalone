@@ -46,7 +46,6 @@
       ansible.builtin.stat:
         path: "{{ postgresql_data_dir }}/PG_VERSION"
       register: pgdata_initialized
-      when: patroni_cluster_bootstrap_method == "initdb"
 
     - name: PostgreSQL | data directory check result
       ansible.builtin.fail:
