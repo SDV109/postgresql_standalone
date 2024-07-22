@@ -63,6 +63,7 @@
   roles:
     - role: packages
 
+  tasks:
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
         pkg:
