@@ -125,7 +125,7 @@
   register: pg_createcluster_result
   failed_when: pg_createcluster_result.rc != 0
 
-- name: Prepare PostgreSQL | Restart PostgreSQL
+- name: Prepare PostgreSQL | Start PostgreSQL
   become: true
   become_user: postgres
   ansible.builtin.command: >
