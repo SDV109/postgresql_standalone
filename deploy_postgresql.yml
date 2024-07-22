@@ -61,7 +61,6 @@
       delay: 5
       retries: 3
 
-  tasks:
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
         pkg:
@@ -98,7 +97,7 @@
     - name: Include system variables
       ansible.builtin.include_vars: "vars/system.yml"
       tags: always
-      
+
   roles:
     - role: packages
     - role: add_repo
