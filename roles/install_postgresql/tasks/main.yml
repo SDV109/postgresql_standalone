@@ -136,7 +136,6 @@
   failed_when:
     - pg_ctl_start_result.rc != 0
 
-
 - name: Prepare PostgreSQL | Check exists postgresql.base.conf
   ansible.builtin.stat:
     path: "{{ postgresql_conf_dir }}/postgresql.base.conf"
