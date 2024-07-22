@@ -1,12 +1,12 @@
 ---
 
-- name: Deploy PostgreSQL standalone
+- name: Deploy PostgreSQL standalone | Pre-checks servers for playbook
   hosts: all
   become: true
   become_method: sudo
   gather_facts: true
   tags: always
-  any_errors_fatal: false
+  any_errors_fatal: true
   environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
@@ -61,9 +61,6 @@
       delay: 5
       retries: 3
 
-  roles:
-    - role: packages
-
   tasks:
     - name: Make sure the gnupg and apt-transport-https packages are present
       ansible.builtin.apt:
@@ -84,8 +81,26 @@
       until: apt_status is success
       delay: 5
       retries: 3
+- name: Deploy PostgreSQL standalone | Configure servers, install and configure Postgresql
+  hosts: all
+  become: true
+  become_method: sudo
+  gather_facts: true
+  tags: always
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
 
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+      
   roles:
+    - role: packages
     - role: add_repo
     - role: locale
     - role: timezone
