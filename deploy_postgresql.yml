@@ -1,11 +1,12 @@
 ---
+
 - name: Deploy PostgreSQL standalone
   hosts: all
-  become: yes
+  become: true
   become_method: sudo
   gather_facts: true
   tags: always
-  any_errors_fatal: true
+  any_errors_fatal: false
   environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
