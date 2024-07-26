@@ -10,9 +10,8 @@
       become: true
       become_user: postgres
       ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ postgres }} -d postgres -Xc\"\\du\""
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d postgres -Xc\"\\du\""
       register: users_result
-      delegate_to: "{{ groups.master[0] }}"
       changed_when: false
 
     - name: PostgreSQL list of users
@@ -29,7 +28,7 @@
       become: true
       become_user: postgres
       ansible.builtin.command:
-        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ postgres }} -d postgres -Xc
+        "{{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d postgres -Xc
         \"
           SELECT
           d.datname as name,
@@ -51,7 +50,6 @@
           ORDER BY 1
         \""
       register: dbs_result
-      delegate_to: "{{ groups.master[0] }}"
       changed_when: false
 
     - name: PostgreSQL list of databases
@@ -72,10 +70,10 @@
     - pg_ctl_status_result.rc != 0
     - pg_ctl_status_result.rc != 3
 
-- name: PostgreSQL Cluster health
+- name: PostgreSQL health
   run_once: true
   ansible.builtin.debug:
-    var: pg_ctl_status_result
+    var: pg_ctl_status_result.stdout_lines
 
 - name: PostgreSQL connection info
   run_once: true
