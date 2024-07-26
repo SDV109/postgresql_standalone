@@ -5,3 +5,13 @@
     state: latest
   loop: "{{ system_packages }}"
   become: yes
+- name: Install pip (if not already present)
+  package:
+    name: python3-pip
+    state: present
+  when: ansible_distribution_major_version == "10" or ansible_distribution_major_version == "11" or ansible_distribution_major_version == "12" or ansible_distribution_major_version == "18" or ansible_distribution_major_version == "20" 
+
+- name: Install Psycopg2 with pip
+  pip:
+    name: psycopg2
+    state: present
