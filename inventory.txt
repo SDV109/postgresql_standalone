@@ -1,4 +1,4 @@
-[hosts]
+[hosts_postgresql]
 192.168.62.206 hostname=standalone01 postgresql_exists=false
 #192.168.62.207 hostname=standalone02 postgresql_exists=false
 

@@ -1,4 +1,15 @@
 ---
+
+# DNS servers (/etc/resolv.conf)
+nameservers: []
+#  - "8.8.8.8"  # example (Google Public DNS)
+#  - "9.9.9.9"  # (Quad9 Public DNS)
+
+# /etc/hosts (optional)
+etc_hosts: []
+#  - "10.128.64.143 pgbackrest.minio.local minio.local s3.eu-west-3.amazonaws.com"  # example (MinIO)
+#  - ""
+
 #block ntp
 ntp_enabled: false  # or 'true' if you want to install and configure the ntp service
 ntp_servers: []
@@ -12,25 +23,6 @@ ntp_servers: []
 # timezone: "America/New_York"
 timezone: "Europe/Moscow"
 # timezone: "Europe/Berlin"
-
-#block locale
-locale_gen:
-  - { language_country: "en_US", encoding: "UTF-8" }
-  - { language_country: "ru_RU", encoding: "UTF-8" }
-#  - { language_country: "de_DE", encoding: "UTF-8" }
-#  - { language_country: "", encoding: "" }
-
-locale: "en_US.utf-8"
-#locale: "ru_RU.utf-8"
-
-#block sudo
-sudo_users:
-  - name: "postgres"
-    nopasswd: "yes"  # or "no" to require a password
-    commands: "ALL"
-#  - name: "joe" # other user (example)
-#    nopasswd: "no"
-#    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
 
 #block packages
 system_packages:
@@ -65,25 +57,66 @@ timescaledb_packages:
   - timescaledb-2-loader-postgresql-{{ postgresql_version }}
   - timescaledb-2-postgresql-{{ postgresql_version }}
 
-# stats_temp_directory (mount the statistics directory in tmpfs)
-# if postgresql_version < 15
-postgresql_stats_temp_directory_path: "/var/lib/pgsql_stats_tmp"  # or 'none'
-postgresql_stats_temp_directory_size: "1024m"
+#block locale
+locale_gen:
+  - { language_country: "en_US", encoding: "UTF-8" }
+  - { language_country: "ru_RU", encoding: "UTF-8" }
+#  - { language_country: "de_DE", encoding: "UTF-8" }
+#  - { language_country: "", encoding: "" }
+
+locale: "en_US.utf-8"
+#locale: "ru_RU.utf-8"
+
+sysctl_conf:
+  - { name: "vm.overcommit_memory", value: "2" }
+  - { name: "vm.swappiness", value: "1" }
+  - { name: "vm.min_free_kbytes", value: "102400" }
+  - { name: "vm.dirty_expire_centisecs", value: "1000" }
+  - { name: "vm.dirty_background_bytes", value: "67108864" }
+  - { name: "vm.dirty_bytes", value: "536870912" }
+  - { name: "vm.zone_reclaim_mode", value: "0" }
+  - { name: "kernel.numa_balancing", value: "0" }
+  - { name: "kernel.sched_autogroup_enabled", value: "0" }
+  - { name: "net.ipv4.ip_nonlocal_bind", value: "1" }
+  - { name: "net.ipv4.ip_forward", value: "1" }
+  - { name: "net.ipv4.ip_local_port_range", value: "10000 65535" }
+  - { name: "net.core.netdev_max_backlog", value: "10000" }
+  - { name: "net.ipv4.tcp_max_syn_backlog", value: "8192" }
+  - { name: "net.core.somaxconn", value: "65535" }
+  - { name: "net.ipv4.tcp_tw_reuse", value: "1" }
+#  - { name: "net.netfilter.nf_conntrack_max", value: "1048576" }
+#  - { name: "kernel.sched_migration_cost_ns", value: "5000000" }
+#  - { name: "", value: "" }
+
+#block sudo
+sudo_users:
+  - name: "postgres"
+    nopasswd: "yes"  # or "no" to require a password
+    commands: "ALL"
+#  - name: "joe" # other user (example)
+#    nopasswd: "no"
+#    commands: "/usr/bin/find, /usr/bin/less, /usr/bin/tail, /bin/kill"
+
+# Max open file limit
+set_limits: true  # or 'false'
+limits_user: "postgres"
+soft_nofile: 65536
+hard_nofile: 200000
 
 os_valid_distributions:
-  - RedHat
-  - CentOS
-  - Rocky
-  - OracleLinux
   - Ubuntu
   - Debian
-  - AlmaLinux
+#  - RedHat
+#  - CentOS
+#  - Rocky
+#  - OracleLinux
+#  - AlmaLinux
 
 os_minimum_versions:
-  RedHat: 7
-  CentOS: 7
-  Rocky: 8.4
-  OracleLinux: 7
   Ubuntu: 20.04
   Debian: 10
-  AlmaLinux: 8.3
+#  RedHat: 7
+#  CentOS: 7
+#  Rocky: 8.4
+#  OracleLinux: 7
+#  AlmaLinux: 8.3

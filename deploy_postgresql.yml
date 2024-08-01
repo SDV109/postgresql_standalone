@@ -80,6 +80,7 @@
       until: apt_status is success
       delay: 5
       retries: 3
+
 - name: Deploy PostgreSQL standalone | Configure servers, install and configure Postgresql
   hosts: all
   become: true
@@ -99,18 +100,22 @@
       tags: always
 
   roles:
+    - role: hostname
+    - role: resolv_conf
+    - role: etc_hosts
+    - role: timezone
     - role: packages
     - role: add_repo
-    - role: locale
-    - role: timezone
+    - role: locales
     - role: ntp
     - role: sudo
-
+    - role: sysctl
+    - role: pam_limits
 #    - role: pgbouncer
 #      when: pgbouncer_install|bool
-
     - role: install_postgresql
-
+    - role: pgpass
+    
     # optional
     - role: postgresql-users
       when: postgresql_users | length > 0

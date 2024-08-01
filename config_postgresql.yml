@@ -1,0 +1,43 @@
+---
+- name: config_pgcluster.yml | Configuration PostgreSQL
+  hosts: hosts_postgresql
+  gather_facts: true
+
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/{{ ansible_os_family }}.yml"
+
+  roles:
+
+    - role: pre-checks
+      vars:
+        minimal_ansible_version: 2.11.0
+        timescale_minimal_pg_version: 12 # if enable_timescale is defined
+
+    - role: hostname
+    - role: resolv_conf
+    - role: etc_hosts
+    - role: timezone
+    - role: add_repo
+    - role: packages
+    - role: sudo
+    - role: sysctl
+    - role: pam_limits
+    - role: locales
+    - role: ntp
+    - role: pgpass
+    - role: config_postgresql
+    - role: pgbouncer/config
+      when: pgbouncer_install | bool
+    - role: postgresql-users
+    - role: postgresql-databases
+    - role: postgresql-schemas
+    - role: postgresql-extensions
+
+    - role: deploy-finish

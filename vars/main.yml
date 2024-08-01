@@ -163,6 +163,13 @@ postgresql_pg_ident: []
 #  - { mapname: "main", system_username: "postgres", pg_username: "backup" }
 #  - { mapname: "", system_username: "", pg_username: "" }
 
+# the password file (~/.pgpass)
+postgresql_pgpass:
+  - "localhost:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
+  - "{{ inventory_hostname }}:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
+#  - "*:{{ pgbouncer_listen_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
+#  - hostname:port:database:username:password
+
 # PgBouncer TODO Block
 pgbouncer_install: false  # or 'false' if you do not want to install and configure the pgbouncer service
 #pgbouncer_processes: 1  # Number of pgbouncer processes to be used. Multiple processes use the so_reuseport option for better performance.
