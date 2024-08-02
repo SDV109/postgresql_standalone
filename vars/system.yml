@@ -67,6 +67,9 @@ locale_gen:
 locale: "en_US.utf-8"
 #locale: "ru_RU.utf-8"
 
+# Kernel parameters
+sysctl_set: true  # or 'false'
+# these parameters for example! Specify kernel options for your system
 sysctl_conf:
   - { name: "vm.overcommit_memory", value: "2" }
   - { name: "vm.swappiness", value: "1" }
