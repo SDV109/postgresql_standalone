@@ -33,8 +33,8 @@
     - role: ntp
     - role: pgpass
     - role: config_postgresql
-    - role: pgbouncer/config
-      when: pgbouncer_install | bool
+#    - role: pgbouncer/config
+#      when: pgbouncer_install | bool
     - role: postgresql-users
     - role: postgresql-databases
     - role: postgresql-schemas
