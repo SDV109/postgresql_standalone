@@ -3,49 +3,22 @@
 - name: Check if postgresql.conf exists
   ansible.builtin.stat:
     path: "{{ postgresql_conf_dir }}.postgresql.conf"
-    register: postgresql_conf_stat
-  become: true
-  become_user: postgres
+  register: postgresql_conf_stat
 
 - name: Fail if postgresql.conf doesn't exist
   ansible.builtin.fail:
     msg: "File {{ postgresql_conf_dir }}.postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
 
-  - name: Check if postgresql.base.conf exists
+- name: Check if postgresql.base.conf exists
   ansible.builtin.stat:
     path: "{{ postgresql_conf_dir }}.postgresql.base.conf"
-    register: postgresql_conf_stat
-  become: true
-  become_user: postgres
+  register: postgresql_conf_stat
 
 - name: Fail if postgresql.base.conf doesn't exist
   ansible.builtin.fail:
     msg: "File {{ postgresql_conf_dir }}.postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
-
-- name: Get existing postgresql parameters
-  ansible.builtin.lineinfile:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
-    regexp: '^.*([^:]+): .*$'
-    state: present
-    register: postgresql_parameters_existing
-  become: true
-  become_user: postgres
-
-- name: Get postgresql.conf content
-  ansible.builtin.file:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
-    content: "{{ lookup('file', postgresql_conf_dir }}.postgresql.conf') }}"
-    register: postgresql_conf_content
-
-- name: Add new postgresql parameters to "{{ postgresql_conf_dir }}.postgresql.conf"
-  ansible.builtin.lineinfile:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
-    line: "{{ item.option }}: {{ item.value }}"
-    insertbefore: "{{ lookup('regex_findall', '^.*' ~ item.option ~ ':.*$', postgresql_conf_content) | first }}"
-  loop: "{{ postgresql_parameters }}"
-  when: item.option not in postgresql_parameters_existing.lines
 
 - name: Update postgresql parameters from "{{ postgresql_conf_dir }}.postgresql.conf"
   ansible.builtin.lineinfile:

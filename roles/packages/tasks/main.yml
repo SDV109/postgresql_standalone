@@ -13,5 +13,5 @@
 
 - name: Install Psycopg2 with pip
   pip:
-    name: psycopg2
+    name: psycopg2-binary
     state: present
