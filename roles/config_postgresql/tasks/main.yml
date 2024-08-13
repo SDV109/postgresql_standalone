@@ -28,15 +28,6 @@
   loop: "{{ postgresql_parameters }}"
   when: item.value == "null"
 
-- name: Replace postgresql parameter in "{{ postgresql_conf_dir }}.postgresql.conf"
-  ansible.builtin.replace:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
-    regexp: '^.*{{ item.option }}: {{ item.value }}$'
-    replace: '^.*{{ item.option }}: {{ item.value }}$'
-    with_string: '{{ item.option }}: {{ expected_value }}'
-  loop: "{{ postgresql_parameters }}"
-  when: item.value != "{{ expected_value }}"
-
 - name: Delete postgresql parameters from "{{ postgresql_conf_dir }}.postgresql.conf"
   ansible.builtin.lineinfile:
     path: "{{ postgresql_conf_dir }}.postgresql.conf"
