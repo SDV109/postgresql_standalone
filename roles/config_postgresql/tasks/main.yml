@@ -2,35 +2,35 @@
 
 - name: Check if postgresql.conf exists
   ansible.builtin.stat:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
   register: postgresql_conf_stat
 
 - name: Fail if postgresql.conf doesn't exist
   ansible.builtin.fail:
-    msg: "File {{ postgresql_conf_dir }}.postgresql.conf does not exist!"
+    msg: "File {{ postgresql_conf_dir }}/postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
 
 - name: Check if postgresql.base.conf exists
   ansible.builtin.stat:
-    path: "{{ postgresql_conf_dir }}.postgresql.base.conf"
+    path: "{{ postgresql_conf_dir }}/postgresql.base.conf"
   register: postgresql_conf_stat
 
 - name: Fail if postgresql.base.conf doesn't exist
   ansible.builtin.fail:
-    msg: "File {{ postgresql_conf_dir }}.postgresql.conf does not exist!"
+    msg: "File {{ postgresql_conf_dir }}/postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
 
-- name: Update postgresql parameters from "{{ postgresql_conf_dir }}.postgresql.conf"
+- name: Update postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
   ansible.builtin.lineinfile:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
     regexp: '^.*{{ item.option }}: {{ item.value }}$'
     state: absent
   loop: "{{ postgresql_parameters }}"
   when: item.value == "null"
 
-- name: Delete postgresql parameters from "{{ postgresql_conf_dir }}.postgresql.conf"
+- name: Delete postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
   ansible.builtin.lineinfile:
-    path: "{{ postgresql_conf_dir }}.postgresql.conf"
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
     regexp: '^.*{{ item.option }}: {{ item.value }}$'
     state: absent
   loop: "{{ postgresql_parameters }}"
