@@ -20,13 +20,13 @@
     msg: "File {{ postgresql_conf_dir }}/postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
 
-- name: Update postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
-  ansible.builtin.lineinfile:
-    path: "{{ postgresql_conf_dir }}/postgresql.conf"
-    regexp: '^.*{{ item.option }}: {{ item.value }}$'
-    state: absent
+- name: Replace parameters in postgresql.conf
+  replace:
+    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    regexp: '^{{ item.option }}\s*=\s*.*$'
+    replace: "{{ item.option }} = '{{ item.value }}'"
   loop: "{{ postgresql_parameters }}"
-  when: item.value == "null"
+  when: item.value != "null"
 
 - name: Delete postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
   ansible.builtin.lineinfile:
@@ -36,8 +36,20 @@
   loop: "{{ postgresql_parameters }}"
   when: item.value == "null"
 
-# Update pg_hba.conf
-- ansible.builtin.import_tasks: pg_hba.yml
+- name: Update pg_hba.conf
+  ansible.builtin.template:
+    src: templates/pg_hba.conf.j2
+    dest: "{{ postgresql_conf_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: "reload postgres"
+  tags: pg_hba, pg_hba_generate
+
+- name: Prepare PostgreSQL | reload for apply the pg_hba.conf
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl reload -D {{ postgresql_data_dir }}"
 
 - name: "Check if there are any changed parameters that require a restart"
   become: true
