@@ -31,7 +31,7 @@
 - name: Delete postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
   ansible.builtin.lineinfile:
     path: "{{ postgresql_conf_dir }}/postgresql.conf"
-    regexp: '^.*{{ item.option }}: {{ item.value }}$'
+    regexp: '^{{ item.option }}\s*=\s*.*$'
     state: absent
   loop: "{{ postgresql_parameters }}"
   when: item.value == "null"
