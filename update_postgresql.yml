@@ -1,0 +1,223 @@
+---
+- name: update_pgcluster.yml | Update PostgreSQL HA Cluster (based on "Patroni")
+  hosts: hosts_postgresql
+  gather_facts: true
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+      tags: always
+
+    - name: Include system variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      tags: always
+
+    - name: System information
+      ansible.builtin.debug:
+        var: system_info
+      vars:
+        system_info:
+          OS: "{{ ansible_distribution | default('N/A') }} {{ ansible_distribution_version | default('N/A') }}"
+          Kernel: "{{ ansible_kernel | default('N/A') }}"
+          CPU model: >-
+            {{ ansible_processor[2] | default('N/A') }},
+            count: {{ ansible_processor_count | default('N/A') }},
+            cores: {{ ansible_processor_cores | default('N/A') }}
+          Memory: "{{ (ansible_memtotal_mb / 1024) | round(2) if ansible_memtotal_mb is defined else 'N/A' }} GB"
+          Disk space total: >-
+            {{
+              (ansible_mounts
+                | map(attribute='size_total')
+                | map('int')
+                | sum / 1024 / 1024 / 1024
+              )
+              | round(2) if ansible_mounts is defined else 'N/A'
+            }} GB
+          Architecture: "{{ ansible_architecture | default('N/A') }}"
+          Virtualization type: "{{ ansible_virtualization_type | default('N/A') }}"
+          Product name: "{{ ansible_product_name | default('N/A') }}"
+      tags: always
+
+  roles:
+    - role: pre-checks
+      vars:
+        minimal_ansible_version: 2.11.0
+        timescale_minimal_pg_version: 12 # if enable_timescale is defined
+      tags: always
+
+- name: "(1/4) PRE-UPDATE: Perform pre-update tasks"
+  hosts: hosts_postgresql
+  gather_facts: true
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "vars/update.yml"
+
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/system.yml"
+
+  tasks:
+    - name: Running Pre-Checks
+      ansible.builtin.include_role:
+        name: update_postgresql
+        tasks_from: pre_checks
+
+    # This task updates the pgBackRest package on the backup server (Dedicated Repository Host).
+    # It runs only if the 'pgbackrest' group is defined in the inventory and the update target is set to 'system'.
+#    - name: Update pgBackRest package (Dedicated Repository Host)
+#      ansible.builtin.include_role:
+#        name: update
+#        tasks_from: pgbackrest_host
+#      when: groups['pgbackrest'] | default([]) | length > 0 and target | lower == 'system'
+  tags:
+    - update
+    - pre-checks
+
+- name: "(2/3) UPDATE Postgresql"
+  hosts: hosts_postgresql
+  serial: 1 # update replicas one by one
+  gather_facts: true
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
+
+  pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "vars/update.yml"
+
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/system.yml"
+
+  tasks:
+    - name: Stop read-only traffic
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: stop_traffic
+
+    - name: Stop Services
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: stop_services
+
+    - name: Update PostgreSQL
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: postgres
+      when: target | lower == 'postgres' or target | lower == 'system'
+
+    - name: Update Patroni
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: patroni
+      when: target | lower == 'patroni' or target | lower == 'system'
+
+    - name: Update all system packages
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: system
+      when: target | lower == 'system'
+
+    - name: Start Services
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: start_services
+
+    - name: Start read-only traffic
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: start_traffic
+  tags:
+    - update
+    - update-secondary
+
+- name: "(3/3) POST-UPDATE: Update extensions"
+  hosts: postgres_cluster
+  gather_facts: true
+  become: true
+  become_user: postgres
+  any_errors_fatal: true
+
+  pre_tasks:
+    - name: Include role variables
+      ansible.builtin.include_vars: "vars/update.yml"
+
+    - name: Include main variables
+      ansible.builtin.include_vars: "vars/main.yml"
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "vars/system.yml"
+      
+  tasks:
+    - name: Update extensions
+      ansible.builtin.include_role:
+        name: update
+        tasks_from: extensions
+      when: update_extensions | bool
+
+    # finish (info)
+    - name: Check for any update failure
+      run_once: true # noqa run-once
+      ansible.builtin.set_fact:
+        any_update_failed: "{{ any_update_failed | default(false) or
+          hostvars[item].update_postgres_failed | default(false) or
+          hostvars[item].update_patroni_failed | default(false) or
+          hostvars[item].update_system_failed | default(false) }}"
+      loop: "{{ groups['postgres_cluster'] }}"
+
+    - name: Check the Patroni cluster state
+      run_once: true # noqa run-once
+      become: true
+      become_user: postgres
+      ansible.builtin.command: patronictl -c /etc/patroni/patroni.yml list
+      register: patronictl_result
+      changed_when: false
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/bin:/usr/local/bin"
+
+    - name: Check the current PostgreSQL version
+      run_once: true # noqa run-once
+      ansible.builtin.command: >-
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        "select current_setting('server_version')"
+      register: postgres_version
+      changed_when: false
+
+    - name: List the Patroni cluster members
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg: "{{ patronictl_result.stdout_lines }}"
+      when: patronictl_result.stdout_lines is defined
+
+    # if there are no update errors
+    - name: Update completed
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg:
+          - "PostgreSQL HA cluster update completed."
+          - "Current version: {{ postgres_version.stdout }}"
+      when: not any_update_failed
+
+    # if there were errors during the update
+    - name: Update completed with error
+      run_once: true # noqa run-once
+      ansible.builtin.debug:
+        msg:
+          - "Update of PostgreSQL HA cluster completed with errors. Check the Ansible log."
+          - "Current version: {{ postgres_version.stdout }}"
+      when: any_update_failed
+  tags:
+    - update
+    - update-extensions

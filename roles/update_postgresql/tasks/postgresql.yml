@@ -1,0 +1,59 @@
+---
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  register: apt_status
+  until: apt_status is success
+  delay: 5
+  retries: 3
+  ignore_errors: true
+
+- name: Install the latest version of PostgreSQL packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ postgresql_packages }}"
+  register: update_postgres_package
+  until: update_postgres_package is success
+  delay: 5
+  retries: 3
+  ignore_errors: true
+
+- name: Install TimescaleDB package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ timescaledb_package }}"
+  become: yes
+  vars:
+    timescaledb_package:
+      - >
+        {% if postgresql_version | int >= 11 %}
+        timescaledb-2-postgresql-{{ postgresql_version }}
+        {% else %}
+        timescaledb-postgresql-{{ postgresql_version }}
+        {% endif %}
+  register: update_timescaledb_package
+  until: update_timescaledb_package is success
+  delay: 5
+  retries: 3
+  environment: "{{ proxy_env | default({}) }}"
+  when:
+    - install_timescaledb is defined
+    - install_timescaledb | bool
+  ignore_errors: true
+
+# Set flag if any update failed
+- name: "Set variable: update_postgres_failed"
+  ansible.builtin.set_fact:
+    update_postgres_failed: true
+  when: update_postgres_package is failed
+
+- name: "Set variable: update_postgres_failed"
+  ansible.builtin.set_fact:
+    update_postgres_failed: true
+  when: update_timescaledb_package is failed
+
+...
