@@ -20,13 +20,23 @@
     msg: "File {{ postgresql_conf_dir }}/postgresql.conf does not exist!"
   when: postgresql_conf_stat.stat.exists == false
 
+- name: Add new parameters in postgresql.conf
+  lineinfile:
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
+    line: "{{ item.option }} = {{ item.value }}"
+    state: present
+    create: yes
+    insert: after
+  loop: "{{ new_postgresql_parameters }}"
+  when: item.value != ""
+
 - name: Replace parameters in postgresql.conf
   replace:
-    path: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
+    path: "{{ postgresql_conf_dir }}/postgresql.conf"
     regexp: '^{{ item.option }}\s*=\s*.*$'
     replace: "{{ item.option }} = '{{ item.value }}'"
   loop: "{{ postgresql_parameters }}"
-  when: item.value != "null"
+  when: item.value != ""
 
 - name: Delete postgresql parameters from "{{ postgresql_conf_dir }}/postgresql.conf"
   ansible.builtin.lineinfile:
@@ -34,7 +44,7 @@
     regexp: '^{{ item.option }}\s*=\s*.*$'
     state: absent
   loop: "{{ postgresql_parameters }}"
-  when: item.value == "null"
+  when: item.value == ""
 
 - name: Update pg_hba.conf
   ansible.builtin.template:

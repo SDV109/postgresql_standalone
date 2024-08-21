@@ -57,7 +57,7 @@ postgresql_extensions: []
 #  - { ext: "pg_stat_statements", db: "mydatabase" }
 #  - { ext: "pg_stat_statements", db: "mydatabase", schema: "myschema" }
 
-# postgresql parameters to bootstrap dcs (are parameters for example)
+# postgresql parameters to create postgresql.conf and replace option on config_postgresql.yml
 postgresql_parameters:
   - { option: "max_connections", value: "500" }
   - { option: "superuser_reserved_connections", value: "5" }
@@ -139,8 +139,11 @@ postgresql_parameters:
   - { option: "tcp_keepalives_count", value: "10" }
   - { option: "tcp_keepalives_idle", value: "300" }
   - { option: "tcp_keepalives_interval", value: "30" }
-#  - { option: "old_snapshot_threshold", value: "60min" }
-#  - { option: "", value: "" }
+  - { option: "old_snapshot_threshold", value: "60min" }
+
+# new postgresql parameters only for config_postgresql.ynl Example^
+new_postgresql_parameters: []
+#  - { option: "cron.database_name", value: "postgres" }
 #  - { option: "", value: "" }
 
 # Set this variable to "true" if you want the instance to be automatically restarted.
