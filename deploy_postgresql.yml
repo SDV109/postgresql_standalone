@@ -1,7 +1,7 @@
 ---
 
 - name: Deploy PostgreSQL standalone | Pre-checks servers for playbook
-  hosts: all
+  hosts: hosts_postgresql
   become: true
   become_method: sudo
   gather_facts: true
@@ -82,7 +82,7 @@
       retries: 3
 
 - name: Deploy PostgreSQL standalone | Configure servers, install and configure Postgresql
-  hosts: all
+  hosts: hosts_postgresql
   become: true
   become_method: sudo
   gather_facts: true

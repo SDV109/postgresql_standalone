@@ -40,8 +40,8 @@
   loop: "{{ postgresql_packages }}"
   become: yes
   environment: "{{ proxy_env | default({}) }}"
-  register: apt_status
-  until: apt_status is success
+  register: postgresql_packages
+  until: postgresql_packages is success
   delay: 5
   retries: 3
   tags: install_postgres
@@ -61,8 +61,8 @@
         {% else %}
         timescaledb-postgresql-{{ postgresql_version }}
         {% endif %}
-  register: package_status
-  until: package_status is success
+  register: timescaledb_package
+  until: timescaledb_package is success
   delay: 5
   retries: 3
   environment: "{{ proxy_env | default({}) }}"
