@@ -1,6 +1,6 @@
 ---
 
-target: postgres
+target: postgresql # Defines the target for the update. Available values: 'postgresql', 'system'
 update_timescaledb: false
 
 update_extensions: true # Attempt will be made to automatically update all PostgreSQL extensions in all databases.

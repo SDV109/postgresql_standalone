@@ -3,6 +3,7 @@
     - name: Add PostgreSQL repo
       shell: echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
       become: yes
+      changed_when: false
 
     - name: Add key PostgreSQL repo
       ansible.builtin.apt_key:
@@ -14,6 +15,7 @@
       shell: echo "deb https://packagecloud.io/timescale/timescaledb/debian/ $(lsb_release -c -s) main" > /etc/apt/sources.list.d/timscale.list
       become: yes
       when: install_timescaledb|bool
+      changed_when: false
 
     - name: Add key repo TimescaleDB
       apt_key:
@@ -21,7 +23,7 @@
         state: present
       become: yes
       when: install_timescaledb|bool
-      
+
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: true

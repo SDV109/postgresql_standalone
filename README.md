@@ -14,3 +14,6 @@ cd postgresql_standalone
 nano inventory
 
 ansible-playbook deploy_postgresql.yml
+
+
+5050L-A0000-01BYB-BE7B6-QCZ28

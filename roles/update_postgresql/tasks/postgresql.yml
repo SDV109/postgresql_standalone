@@ -43,17 +43,18 @@
   when:
     - install_timescaledb is defined
     - install_timescaledb | bool
+    - update_timescaledb | bool
   ignore_errors: true
 
 # Set flag if any update failed
 - name: "Set variable: update_postgres_failed"
   ansible.builtin.set_fact:
-    update_postgres_failed: true
-  when: update_postgres_package is failed
+    update_postgresql_failed: true
+  when: update_postgresql_package is failed
 
 - name: "Set variable: update_postgres_failed"
   ansible.builtin.set_fact:
-    update_postgres_failed: true
+    update_postgresql_failed: true
   when: update_timescaledb_package is failed
 
 ...
