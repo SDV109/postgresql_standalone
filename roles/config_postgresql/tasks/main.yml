@@ -52,7 +52,6 @@
     owner: postgres
     group: postgres
     mode: "0640"
-  notify: "reload postgres"
   tags: pg_hba, pg_hba_generate
 
 - name: Prepare PostgreSQL | reload for apply the pg_hba.conf

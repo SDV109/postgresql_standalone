@@ -7,8 +7,6 @@
     where installed_version <> default_version"
   register: pg_old_extensions
   changed_when: false
-  when:
-    - patroni_leader_result.status == 200
 
 # if there are no old extensions
 - name: The extensions are up-to-date
@@ -26,10 +24,7 @@
   ignore_errors: true
   loop: "{{ pg_old_extensions.stdout_lines | reject('match', '^pg_repack$') | list }}"
   register: pg_old_extensions_update_result
-  when:
-    - patroni_leader_result.status == 200
-    - (pg_old_extensions.stdout_lines | length > 0
-       and not 'pg_stat_kcache' in pg_old_extensions.stdout_lines)
+  when: (pg_old_extensions.stdout_lines | length > 0 and not 'pg_stat_kcache' in pg_old_extensions.stdout_lines)
 
 # if pg_stat_kcache is exists
 - block:
@@ -50,7 +45,6 @@
         CREATE EXTENSION pg_stat_statements;
         CREATE EXTENSION pg_stat_kcache"
   when:
-    - patroni_leader_result.status == 200
     - pg_old_extensions.stdout_lines | length > 0
     - ('pg_stat_statements' in pg_old_extensions.stdout_lines or
        'pg_stat_kcache' in pg_old_extensions.stdout_lines)
@@ -61,8 +55,5 @@
     {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d {{ pg_target_dbname }} -tAXc
     "DROP EXTENSION pg_repack;
     CREATE EXTENSION pg_repack;"
-  when:
-    - patroni_leader_result.status == 200
-    - (pg_old_extensions.stdout_lines | length > 0
-       and 'pg_repack' in pg_old_extensions.stdout_lines)
+  when: (pg_old_extensions.stdout_lines | length > 0 and 'pg_repack' in pg_old_extensions.stdout_lines)
 ...

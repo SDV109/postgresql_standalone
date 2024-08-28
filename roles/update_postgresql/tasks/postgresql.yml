@@ -15,8 +15,8 @@
     name: "{{ item }}"
     state: latest
   loop: "{{ postgresql_packages }}"
-  register: update_postgres_package
-  until: update_postgres_package is success
+  register: update_postgresql_package
+  until: update_postgresql_package is success
   delay: 5
   retries: 3
   ignore_errors: true
@@ -47,7 +47,7 @@
   ignore_errors: true
 
 # Set flag if any update failed
-- name: "Set variable: update_postgres_failed"
+- name: "Set variable: update_postgresql_failed"
   ansible.builtin.set_fact:
     update_postgresql_failed: true
   when: update_postgresql_package is failed

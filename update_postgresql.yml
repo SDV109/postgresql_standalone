@@ -59,6 +59,9 @@
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
 
+    - name: Include update variables
+      ansible.builtin.include_vars: "vars/update.yml"
+
   tasks:
     - name: Running Pre-Checks
       ansible.builtin.include_role:
@@ -86,7 +89,7 @@
   environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
-    - name: Include role variables
+    - name: Include update variables
       ansible.builtin.include_vars: "vars/update.yml"
 
     - name: Include main variables
@@ -104,7 +107,7 @@
     - name: Update PostgreSQL
       ansible.builtin.include_role:
         name: update_postgresql
-        tasks_from: postgres
+        tasks_from: postgresql
       when: target | lower == 'postgresql' or target | lower == 'system'
 
     - name: Update all system packages
@@ -131,6 +134,9 @@
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
+      
+    - name: Include update variables
+      ansible.builtin.include_vars: "vars/update.yml"
 
   tasks:
     - name: Update extensions
@@ -146,11 +152,11 @@
         any_update_failed: "{{ any_update_failed | default(false) or
           hostvars[item].update_postgresql_failed | default(false) or
           hostvars[item].update_system_failed | default(false) }}"
-      loop: "{{ groups['postgres_cluster'] }}"
+      loop: "{{ groups['hosts_postgresql'] }}"
 
     - name: Check the current PostgreSQL version
       ansible.builtin.command: >-
-        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc
+        {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d postgres -tAXc
         "select current_setting('server_version')"
       register: postgres_version
       changed_when: false

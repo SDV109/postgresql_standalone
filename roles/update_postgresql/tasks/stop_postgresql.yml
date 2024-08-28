@@ -1,4 +1,4 @@
-  ---
+---
 
 - name: Check PostgreSQL is started and accepting connections
   become: true
@@ -14,9 +14,9 @@
   become: true
   become_user: postgres
   ansible.builtin.command: >
-    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U {{ patroni_superuser_username }} -d postgres -tAXc "CHECKPOINT"
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d postgres -tAXc "CHECKPOINT"
 
-- name: Restart PostgreSQL
+- name: Stop PostgreSQL
   become: true
   become_user: postgres
   ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }}"
@@ -24,4 +24,4 @@
   failed_when:
     - pg_ctl_restart_result.rc != 0
 
-  ...
+...
