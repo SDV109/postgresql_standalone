@@ -1,7 +1,12 @@
 ---
 - name: config_pgcluster.yml | Configuration PostgreSQL
   hosts: hosts_postgresql
+  become: true
+  become_method: sudo
   gather_facts: true
+  tags: always
+  any_errors_fatal: true
+  environment: "{{ proxy_env | default({}) }}"
 
   pre_tasks:
     - name: Include main variables
@@ -11,25 +16,24 @@
       ansible.builtin.include_vars: "vars/system.yml"
 
   roles:
-
     - role: pre-checks
       vars:
         minimal_ansible_version: 2.11.0
         timescale_minimal_pg_version: 12 # if enable_timescale is defined
 
     - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
+    - role: resolv-conf
+    - role: etc-hosts
     - role: timezone
-    - role: add_repo
+    - role: add-repo
     - role: packages
     - role: sudo
     - role: sysctl
-    - role: pam_limits
+    - role: pam-limits
     - role: locales
     - role: ntp
     - role: pgpass
-    - role: config_postgresql
+    - role: config-postgresql
 #    - role: pgbouncer/config
 #      when: pgbouncer_install | bool
     - role: postgresql-users

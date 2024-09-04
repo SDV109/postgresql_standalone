@@ -101,19 +101,19 @@
 
   roles:
     - role: hostname
-    - role: resolv_conf
-    - role: etc_hosts
+    - role: resolv-conf
+    - role: etc-hosts
     - role: timezone
     - role: packages
-    - role: add_repo
+    - role: add-repo
     - role: locales
     - role: ntp
     - role: sudo
     - role: sysctl
-    - role: pam_limits
+    - role: pam-limits
 #    - role: pgbouncer
 #      when: pgbouncer_install|bool
-    - role: install_postgresql
+    - role: install-postgresql
     - role: pgpass
     
     # optional

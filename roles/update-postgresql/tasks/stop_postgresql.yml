@@ -20,8 +20,8 @@
   become: true
   become_user: postgres
   ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }}"
-  register: pg_ctl_restart_result
+  register: pg_ctl_stop_result
   failed_when:
-    - pg_ctl_restart_result.rc != 0
+    - pg_ctl_stop_result.rc != 0
 
 ...
