@@ -1,0 +1,5 @@
+include 'postgresql.base.conf'
+
+{% for parameter in postgresql_parameters %}
+{{ parameter.option }} = '{{ parameter.value }}'
+{% endfor %}
