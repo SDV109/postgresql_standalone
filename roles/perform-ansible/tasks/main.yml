@@ -1,0 +1,69 @@
+---
+
+- name: Check PostgreSQL is started and accepting connections
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+  register: pg_isready_result
+  until: pg_isready_result.rc == 0
+  retries: 30
+  delay: 2
+  changed_when: false
+
+- name: Execute CHECKPOINT before stopping PostgreSQL
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    {{ postgresql_bin_dir }}/psql -p {{ postgresql_port }} -U postgres -d postgres -tAXc "CHECKPOINT"
+
+- name: Stop PostgreSQL
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl stop -D {{ postgresql_data_dir }}"
+  register: pg_ctl_stop_result
+  failed_when:
+    - pg_ctl_stop_result.rc != 0
+
+- name: Check exists postgresql.base.conf
+  ansible.builtin.stat:
+    path: "{{ postgresql_conf_dir }}/postgresql.base.conf"
+  register: conf_exists
+
+- name: postgresql.base.conf exists
+  ansible.builtin.fail:
+    msg: "Whoops! postgresql.base.conf is already exists! Use config_postgresql.yml"
+  when: conf_exists.stat.exists
+
+- name: Move base conf file in postgresql.base.conf
+  ansible.builtin.command: mv {{ postgresql_conf_dir }}/postgresql.conf {{ postgresql_conf_dir }}/postgresql.base.conf
+  when: not conf_exists.stat.exists
+
+- name: Generate postgresql.conf
+  ansible.builtin.template:
+    src: templates/postgresql.conf.j2
+    dest: "{{ postgresql_conf_dir }}/postgresql.conf"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+
+- name: Start PostgreSQL
+  become: true
+  become_user: postgres
+  ansible.builtin.command: >
+    {{ postgresql_bin_dir }}/pg_ctl
+    start -D {{ postgresql_data_dir }}
+    -o "-c config_file={{ postgresql_conf_dir }}/postgresql.conf"
+  register: pg_ctl_start_result
+  failed_when:
+    - pg_ctl_start_result.rc != 0
+
+- name: Check PostgreSQL is started and accepting connections
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+  register: pg_isready_result
+  until: pg_isready_result.rc == 0
+  retries: 30
+  delay: 2
+  changed_when: false
+...
