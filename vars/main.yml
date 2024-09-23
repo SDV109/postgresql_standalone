@@ -59,6 +59,7 @@ postgresql_extensions: []
 
 # postgresql parameters to create postgresql.conf and replace option on config_postgresql.yml
 postgresql_parameters:
+  - { option: "listen_addresses", value: "{{ postgresql_listen_addr }}" }
   - { option: "max_connections", value: "500" }
   - { option: "superuser_reserved_connections", value: "5" }
   - { option: "password_encryption", value: "{{ postgresql_password_encryption_algorithm }}" }
