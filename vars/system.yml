@@ -32,7 +32,6 @@ system_packages:
   - vim
   - gpg
   - iptables
-  - acl
   - dnsutils
   - htop
 
