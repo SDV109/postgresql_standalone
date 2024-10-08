@@ -11,6 +11,10 @@ git clone https://github.com/SDV109/postgresql_standalone.git
 
 cd postgresql_standalone
 
-nano inventory
+nano inventory.txt.
+
+nano vars/main.yml
+
+nano vars/system.yml
 
 ansible-playbook deploy_postgresql.yml
