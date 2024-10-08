@@ -6,7 +6,7 @@ update_timescaledb: false
 update_extensions: true # Attempt will be made to automatically update all PostgreSQL extensions in all databases.
 
 # if target=system
-reboot_host_after_update: true # Restart the server if it is required after the update.
+reboot_host_after_update: false # Restart the server if it is required after the update.
 reboot_host_timeout: 1800 # Maximum seconds to wait for machine to reboot and respond to a test command.
 reboot_host_post_delay: 5 # The waiting time (in minutes) for the caches to warm up after restarting the server before updating the next server.
 
