@@ -65,7 +65,7 @@
   tasks:
     - name: Running Pre-Checks
       ansible.builtin.include_role:
-        name: update_postgresql
+        name: update-postgresql
         tasks_from: pre_checks
 
     # This task updates the pgBackRest package on the backup server (Dedicated Repository Host).
@@ -134,7 +134,7 @@
   pre_tasks:
     - name: Include main variables
       ansible.builtin.include_vars: "vars/main.yml"
-      
+
     - name: Include update variables
       ansible.builtin.include_vars: "vars/update.yml"
 
