@@ -68,7 +68,7 @@ postgresql_parameters:
   - { option: "huge_pages", value: "try" }  # or "on" if you set "vm_nr_hugepages" in kernel parameters
   - { option: "shared_buffers", value: "{{ (ansible_memtotal_mb * 0.25) | int }}MB" }  # by default, 25% of RAM
   - { option: "effective_cache_size", value: "{{ (ansible_memtotal_mb * 0.75) | int }}MB" }  # by default, 75% of RAM
-  - { option: "work_mem", value: "4MB" }  # please change this value
+  - { option: "work_mem", value: "16MB" }  # please change this value
   - { option: "maintenance_work_mem", value: "64MB" }  # please change this value
   - { option: "checkpoint_timeout", value: "15min" }
   - { option: "checkpoint_completion_target", value: "0.9" }
@@ -93,7 +93,7 @@ postgresql_parameters:
   - { option: "archive_command", value: "cd ." }  # not doing anything yet with WAL-s
 #  - { option: "archive_command", value: "{{ wal_g_archive_command }}" }  # archive WAL-s using WAL-G
 #  - { option: "archive_command", value: "{{ pgbackrest_archive_command }}" }  # archive WAL-s using pgbackrest
-  - { option: "wal_level", value: "logical" }
+  - { option: "wal_level", value: "replica" }
   - { option: "wal_keep_size", value: "2GB" }
   - { option: "max_wal_senders", value: "10" }
   - { option: "max_replication_slots", value: "10" }
@@ -101,6 +101,7 @@ postgresql_parameters:
   - { option: "wal_log_hints", value: "on" }
   - { option: "wal_compression", value: "on" }
   - { option: "shared_preload_libraries", value: "pg_stat_statements,auto_explain" }
+#  - { option: "cron.database_name", value: "postgres" }
   - { option: "pg_stat_statements.max", value: "10000" }
   - { option: "pg_stat_statements.track", value: "all" }
   - { option: "pg_stat_statements.track_utility", value: "false" }
@@ -133,7 +134,7 @@ postgresql_parameters:
   - { option: "wal_receiver_status_interval", value: "10s" }
   - { option: "idle_in_transaction_session_timeout", value: "10min" }  # reduce this timeout if possible
   - { option: "jit", value: "off" }
-  - { option: "max_worker_processes", value: "24" }
+  - { option: "max_worker_processes", value: "8" }
   - { option: "max_parallel_workers", value: "8" }
   - { option: "max_parallel_workers_per_gather", value: "2" }
   - { option: "max_parallel_maintenance_workers", value: "2" }
@@ -169,8 +170,8 @@ postgresql_pg_ident: []
 
 # the password file (~/.pgpass)
 postgresql_pgpass:
-  - "localhost:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
-  - "{{ inventory_hostname }}:{{ postgresql_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
+  - "localhost:{{ postgresql_port }}:*:postgres:{{ postgresql_superuser_password }}"
+  - "{{ inventory_hostname }}:{{ postgresql_port }}:*:postgres:{{ postgresql_superuser_password }}"
 #  - "*:{{ pgbouncer_listen_port }}:*:{{ patroni_superuser_username }}:{{ patroni_superuser_password }}"
 #  - hostname:port:database:username:password
 
