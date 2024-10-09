@@ -31,7 +31,7 @@
     dest: /etc/logrotate.d/postgresql-common
     state: absent
   tags: install_postgres
-  
+
 #PostgreSQL main packages
 - name: Install PostgreSQL packages
   ansible.builtin.apt:
@@ -59,7 +59,7 @@
         {% if postgresql_version | int >= 11 %}
         timescaledb-2-postgresql-{{ postgresql_version }}
         {% else %}
-        timescaledb-postgresql-{{ postgresql_version }}
+        timescaledb-2-postgresql-{{ postgresql_version }}
         {% endif %}
   register: timescaledb_package
   until: timescaledb_package is success
@@ -153,7 +153,7 @@
     group: postgres
     mode: "0640"
 
-- name: Prepare PostgreSQL | Restart PostgreSQL 
+- name: Prepare PostgreSQL | Restart PostgreSQL
   become: true
   become_user: postgres
   ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl restart -D {{ postgresql_data_dir }}"
@@ -171,7 +171,7 @@
   delay: 10
   changed_when: false
 
-- name: Prepare PostgreSQL | Generate pg_hba.conf 
+- name: Prepare PostgreSQL | Generate pg_hba.conf
   ansible.builtin.template:
     src: templates/pg_hba.conf.j2
     dest: "{{ postgresql_conf_dir }}/pg_hba.conf"

@@ -33,7 +33,7 @@
         {% if postgresql_version | int >= 11 %}
         timescaledb-2-postgresql-{{ postgresql_version }}
         {% else %}
-        timescaledb-postgresql-{{ postgresql_version }}
+        timescaledb-2-postgresql-{{ postgresql_version }}
         {% endif %}
   register: update_timescaledb_package
   until: update_timescaledb_package is success
