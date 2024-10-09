@@ -7,7 +7,6 @@
     {{ postgresql_bin_dir }}/pg_ctl
     start -D {{ postgresql_data_dir }}
     -o "-c config_file={{ postgresql_conf_dir }}/postgresql.conf"
-  register: pg_ctl_start_result
 
 - name: Check PostgreSQL is started and accepting connections
   become: true
