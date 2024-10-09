@@ -24,4 +24,11 @@
   failed_when:
     - pg_ctl_stop_result.rc != 0
 
+- name: Сheck PostgreSQL is stopped
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl status -D {{ postgresql_data_dir }}"
+  register: pg_ctl_stop_result
+  failed_when: pg_ctl_stop_result.rc != 3
+  changed_when: false
 ...
