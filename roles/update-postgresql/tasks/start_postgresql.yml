@@ -1,4 +1,10 @@
 ---
+- name: Check PostgreSQL is started and accepting connections
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_isready -p {{ postgresql_port }}"
+  register: pg_isready_result
+  ignore_errors: yes
 
 - name: Start PostgreSQL
   become: true
@@ -7,6 +13,13 @@
     {{ postgresql_bin_dir }}/pg_ctl
     start -D {{ postgresql_data_dir }}
     -o "-c config_file={{ postgresql_conf_dir }}/postgresql.conf"
+  when: pg_isready_result.rc != 0
+
+- name: Retart PostgreSQL
+  become: true
+  become_user: postgres
+  ansible.builtin.command: "{{ postgresql_bin_dir }}/pg_ctl restart -D {{ postgresql_data_dir }}"
+  when: pg_isready_result.rc == 0
 
 - name: Check PostgreSQL is started and accepting connections
   become: true
